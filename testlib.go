@@ -61,7 +61,7 @@ func Fib(num int) int {
 	c := make(chan int)
 	quit := make(chan int)
 
-	answer := 0
+	answer := 1
 
 	go func() {
 		for i := 0; i < num; i++ {
