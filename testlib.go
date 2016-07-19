@@ -11,7 +11,7 @@ import (
 
 //Bacon contains baconipsum
 type Bacon struct {
-	val []byte
+	Val []byte
 }
 
 //BaconMe gets some Bacon
@@ -31,7 +31,7 @@ func BaconMe() (*Bacon, error) {
 		return nil, err
 	}
 
-	b := &Bacon{val: body}
+	b := &Bacon{Val: body}
 
 	return b, nil
 }
@@ -86,13 +86,18 @@ func fibonacci(c, quit chan int) {
 	}
 }
 
+type userResult struct {
+	Res []*user `json:"results"`
+}
+
+type user struct {
+	Name userName `json:"name"`
+}
+
 type userName struct {
 	Title string `json:"title"`
 	First string `json:"first"`
 	Last  string `json:"last"`
-}
-type user struct {
-	Name userName `json:"name"`
 }
 
 //UsersN generates N random users and returns the json
@@ -106,7 +111,7 @@ func UsersN(num int) (string, error) {
 		go func() {
 			defer wg.Done()
 			u := getUser()
-			if u != nil {
+			if u == nil {
 				return
 			}
 
@@ -143,12 +148,12 @@ func getUser() *user {
 		return nil
 	}
 
-	u := &user{}
-	err = json.Unmarshal(body, u)
+	r := &userResult{}
+	err = json.Unmarshal(body, r)
 	if err != nil {
 		log.Println(err)
 		return nil
 	}
 
-	return u
+	return r.Res[0]
 }
