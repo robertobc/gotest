@@ -1,12 +1,16 @@
 package testlib
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sync"
+
+	_ "github.com/mattn/go-sqlite3" //sqlite3 driver
 )
 
 //Bacon contains baconipsum
@@ -156,4 +160,61 @@ func getUser() *user {
 	}
 
 	return r.Res[0]
+}
+
+//TryDB creates a database and table (foo) at the specified path
+func TryDB(DBPath string) error {
+	os.Remove(DBPath)
+
+	db, err := sql.Open("sqlite3", DBPath)
+	if err != nil {
+		log.Println("error creating database", err)
+		return err
+	}
+	defer db.Close()
+
+	sqlStmt := `CREATE TABLE users (id INTEGER NOT null PRIMARY KEY, name TEXT);`
+
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sqlStmt)
+		return err
+	}
+
+	_, err = db.Exec("INSERT INTO users(id, name) VALUES (1, 'Peter Parker'), (2, 'J Jonah Jameson'), (3, 'Cletus Cassidy')")
+	if err != nil {
+		log.Println("error inserting", err)
+		return err
+	}
+
+	rows, err := db.Query("SELECT * FROM users")
+	if err != nil {
+		log.Println("error selecting", err)
+		return err
+	}
+	defer rows.Close()
+
+	type user struct {
+		id   int
+		name string
+	}
+
+	users := []user{}
+
+	for rows.Next() {
+		u := user{}
+		if err := rows.Scan(&u.id, &u.name); err != nil {
+			log.Println("error", err)
+			break
+		}
+		users = append(users, u)
+	}
+	if err := rows.Err(); err != nil {
+		log.Println("error iterating through results", err)
+		return err
+	}
+
+	log.Printf("QUERY RESULTS: %+v\n", users)
+
+	return nil
 }
