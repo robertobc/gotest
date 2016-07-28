@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3" //sqlite3 driver
+	_ "github.com/robertobc/gotest/sub"
 )
 
 //Bacon contains baconipsum
